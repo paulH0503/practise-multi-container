@@ -57,13 +57,13 @@ services:
       - course
   client:
     build:
-      context: ./client
+      context: ./fe
       dockerfile: Dockerfile.dev
    
     stdin_open: true
     volumes:
       - /app/node_modules
-      - ./client:/app
+      - ./fe:/app
     networks:
       - course
   worker:
