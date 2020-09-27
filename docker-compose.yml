@@ -1,0 +1,93 @@
+version: '3.6'
+
+services:
+  postgres:
+    image: 'postgres:latest'
+    hostname: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment: 
+      POSTGRES_USER: 'postgres'
+      POSTGRES_DB: 'course'
+      POSTGRES_PASSWORD: '123456'
+    volumes: 
+      - ./server/init-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+    networks:
+      - course
+  redis:
+    image: 'redis:latest'
+    networks:
+      - course
+  nginx:
+    build:
+      context: './nginx'
+      dockerfile: Dockerfile.dev
+    restart: always
+    volumes: 
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    ports:
+      - "3050:80"
+    depends_on: 
+      - api
+      - client
+    networks:
+      - course
+
+  api:
+    depends_on:
+      - redis
+      - postgres
+    build: 
+      context: ./server
+      dockerfile: Dockerfile.dev
+    volumes: 
+      - /app/node_modules
+      - ./server:/app
+    env_file: 
+      - ./variables.env
+    # command: sh ./wait-for-it.sh npm run dev
+    # command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; npm run dev'
+    networks:
+      - course
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+   
+    stdin_open: true
+    volumes:
+      - /app/node_modules
+      - ./client:/app
+    networks:
+      - course
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile.dev
+    volumes:
+      - /app/node_modules
+      - ./worker:/app
+    env_file: 
+      - ./variables.env
+    networks:
+      - course
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+  #     PGADMIN_DEFAULT_PASSWORD: 1
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - postgres
+networks:
+  course:
+    # Use a custom driver
+    driver: bridge
