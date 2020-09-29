@@ -17,7 +17,7 @@ services:
       POSTGRES_DB: 'course'
       POSTGRES_PASSWORD: '123456'
     volumes: 
-      - ./server/init-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - ../server/init-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     networks:
       - course
   redis:
@@ -26,11 +26,11 @@ services:
       - course
   nginx:
     build:
-      context: './nginx'
+      context: '../nginx'
       dockerfile: Dockerfile.dev
     restart: always
     volumes: 
-      - ./nginx/conf.d/:/etc/nginx/conf.d/
+      - ../nginx/conf.d/:/etc/nginx/conf.d/
     ports:
       - "3050:80"
     depends_on: 
@@ -44,37 +44,37 @@ services:
       - redis
       - postgres
     build: 
-      context: ./server
+      context: ../server
       dockerfile: Dockerfile.dev
     volumes: 
       - /app/node_modules
-      - ./server:/app
+      - ../server:/app
     env_file: 
-      - ./variables.env
+      - ./env/local.env
     # command: sh ./wait-for-it.sh npm run dev
     # command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; npm run dev'
     networks:
       - course
   client:
     build:
-      context: ./fe
+      context: ../fe
       dockerfile: Dockerfile.dev
    
     stdin_open: true
     volumes:
       - /app/node_modules
-      - ./fe:/app
+      - ../fe:/app
     networks:
       - course
   worker:
     build:
-      context: ./worker
+      context: ../worker
       dockerfile: Dockerfile.dev
     volumes:
       - /app/node_modules
-      - ./worker:/app
+      - ../worker:/app
     env_file: 
-      - ./variables.env
+      - ./env/local.env
     networks:
       - course
   # pgadmin:
