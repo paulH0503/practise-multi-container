@@ -19,6 +19,14 @@ RESET 			:= $(shell tput -Txterm sgr0)
 # set target color
 TARGET_COLOR := $(BLUE)
 
+check_defined = \
+    $(strip $(foreach 1,$1, \
+        $(call __check_defined,$1,$(strip $(value 2)))))
+__check_defined = \
+    $(if $(value $1),, \
+      $(error ${RED} $1$(if $2, ($2)) is required ${RESET}))
+
+
 
 $(info ${YELLOW}Deployment Information${RESET})
 $(info ${GREEN}- CLIENT_DIR    : $(CLIENT_DIR) ${RESET})
